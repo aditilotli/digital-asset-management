@@ -1,4 +1,6 @@
+const path = require('path');
 const assetModal = require('../modals/schema/asset');
+const fs = require('fs');
 
 
 async function checkAssetId(id) {
@@ -30,10 +32,48 @@ module.exports = {
 
             console.log("req.query ===>", req.query);
 
-            let assetData = await 
-
+            let fileNameCond = req.query.fileName ? {"fileName": { $exists: true, $regex: new RegExp(req.query.fileName, 'i')}} : {};
+            let originalNameCond = req.query.originalName ? {"originalName": { $exists: true, $regex: new RegExp(req.query.originalName, 'i')}} : {};
+            let mimetypeCond = req.query.mimetype ? {"mimetype": { $exists: true, $regex: new RegExp(req.query.mimetype, 'i')}} : {};
+            let tagsCond = req.query.tags
+                ? { tags: { $elemMatch: { $regex: new RegExp(req.query.tags, 'i') } } }
+                : {};
             
-            return res.status(200).json("completed")
+            let sizeCond = {};
+
+            if (req.query.size) {
+                sizeCond.size = {};
+                sizeCond.size.$gte = parseInt('0');
+                if (req.query.size) sizeCond.size.$lte = parseInt(req.query.size);
+            }
+
+            let uploadDateCond = req.query.uploadDate
+                ? {
+                    uploadDate: {
+                        $gte: new Date(new Date(req.query.uploadDate).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(req.query.uploadDate).setHours(23, 59, 59, 999))
+                    }
+                    }
+                : {};
+
+
+            let aggregateQuery = [
+                {
+                    $match: {
+                        $and: [fileNameCond, originalNameCond, mimetypeCond, tagsCond, sizeCond, uploadDateCond]
+                    }
+                },
+                { $sort: { createdAt: -1 } }
+            ]
+            
+            let assetData = await assetModal.aggregate(aggregateQuery);
+            console.log(assetData);
+
+            response = {
+                assetData
+            }
+
+            return res.status(200).json(response)
         } catch (error) {
             return res.status(500).json({ error })
         }
@@ -76,6 +116,31 @@ module.exports = {
             
         } catch (error) {
             return res.status(500).json({ error: error.message });
+        }
+    },
+
+    downloadAsset: async (req, res) => {
+        console.log('downloading....');
+
+        try {
+            console.log('downloading....');
+
+            const filePath = path.join(__dirname, '../uploads', req.params.filename);
+            console.log("Resolved file path:", filePath);
+
+            if (fs.existsSync(filePath)) {
+            return res.download(filePath, (err) => {
+                if (err) {
+                console.error("Download error:", err);
+                res.status(500).send("Could not download file.");
+                }
+            });
+            } else {
+            return res.status(404).json({ error: 'File not found' });
+            }
+        } catch (error) {
+            console.log("Error:", error);
+            return res.status(500).json({ error: 'Internal Server Error' });
         }
     }
 }

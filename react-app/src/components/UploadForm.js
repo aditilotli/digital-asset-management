@@ -29,7 +29,7 @@ function UploadForm() {
                     const response = await api.post(`/dam/api/assets/upload`, formData);
 
                 } catch (error) {
-                    
+                    console.log(error)
                 }
             }
         )();

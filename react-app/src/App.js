@@ -5,6 +5,7 @@ import UploadForm from './components/UploadForm';
 import Gallery from './components/Gallery';
 import { useState } from 'react';
 import Dashboard from './components/Dashboard';
+import AssetsTable from './components/AssetsTable';
 
 function App() {
   const [tab, setTab] = useState(0);
@@ -40,7 +41,7 @@ function App() {
         }
 
         {
-          tab === 2 && <Gallery/>
+          tab === 2 && <AssetsTable/>
         }
       </Container>
 
