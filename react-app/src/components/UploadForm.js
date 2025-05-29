@@ -120,7 +120,7 @@ function UploadForm() {
                             <TextField
                                 // type='text'
                                 label='Tags (comma separated)'
-                                
+                                required
                                 value={tags}
                                 onChange={(e) => setTags(e.target.value)}
                             />
