@@ -9,6 +9,8 @@ router.get('/search', assetCtrl.searchData);
 
 router.get('/download/:filename', assetCtrl.downloadAsset);
 
+router.get('/view/:filename', assetCtrl.viewAsset);
+
 router.post('/upload', multerUpload.single('file'), (req, res) => {
 // router.post('/upload', (req, res) => {
     try {

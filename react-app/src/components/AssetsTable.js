@@ -4,6 +4,7 @@ import '../styling/gallery.css';
 import api from '../utils/api';
 import moment from 'moment';
 import DownloadForOfflineIcon from '@mui/icons-material/DownloadForOffline';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 
 
 function AssetsTable() {
@@ -50,7 +51,7 @@ function AssetsTable() {
         fileType: '',
         tags: '',
         date: '',
-        size: null
+        size: ''
       })
     };
 
@@ -84,13 +85,65 @@ function AssetsTable() {
           window.URL.revokeObjectURL(url);
         }
       )();
-    }
+    };
+
+    const handleAssetView = async (event, asset) => {
+      try {
+        // Get file extension
+        const fileExt = asset.fileName.split('.').pop().toLowerCase();
+        
+        // Handle different file types
+        if(['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+          // Images - open in new tab
+          const imageUrl = `/dam/api/assets/view/${asset.fileName}`;
+          const imagePlayer = window.open('', '_blank');
+          imagePlayer.document.write(`
+            <img src="${imageUrl}" alt="asset" style={{ maxWidth: '100%' }} />
+          `);
+          
+        }
+        else if(['pdf'].includes(fileExt)) {
+          try {
+            const response = await fetch(`/dam/api/assets/view/${asset.fileName}`, {
+              method: 'GET',
+            });
+
+            if (!response.ok) {
+              throw new Error('PDF fetch failed');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+          } catch (error) {
+            console.error('Error opening PDF:', error);
+          }
+        }
+        else if(['mp4', 'webm'].includes(fileExt)) {
+          // Videos - open in new tab with HTML5 video player
+          const videoUrl = `/dam/api/assets/view/${asset.fileName}`;
+          const videoPlayer = window.open('', '_blank');
+          videoPlayer.document.write(`
+            <video controls style="max-width:100%">
+              <source src="${videoUrl}" type="video/${fileExt}">
+              Your browser does not support the video tag.
+            </video>
+          `);
+        }
+        else {
+          // Other files - try to open or download
+          window.open(`/dam/api/assets/view/${asset.fileName}`, '_blank');
+        }
+      } catch (error) {
+        console.error('Error viewing asset:', error);
+      }
+    };
 
     console.log(assets);
 
 
     return (
-        <div>
+        <div style={{ backgroundColor: '#f0f0f0'}}>
           <Container component={Paper}>
 
             <div>
@@ -178,6 +231,7 @@ function AssetsTable() {
                   <TableCell style={{width:'10px', fontWeight:'bold'}}>File Size</TableCell>
                   <TableCell style={{width:'10px', fontWeight:'bold'}}>Tags</TableCell>
                   <TableCell style={{width:'10px', fontWeight:'bold'}}>Upload Date</TableCell>
+                  <TableCell style={{width:'10px', fontWeight:'bold'}}>View</TableCell>
                   <TableCell style={{width:'10px', fontWeight:'bold'}}>Download</TableCell>
                 </TableRow>
               </TableHead>
@@ -195,9 +249,17 @@ function AssetsTable() {
                               <TableCell>{moment(asset.uploadDate).format('DD-MM-YYYY')}</TableCell>
                               <TableCell>
                                 <IconButton
+                                  
+                                  onClick={(e) => handleAssetView(e, asset)}
+                                >
+                                  <RemoveRedEyeIcon style={{ fill: 'black' }}/>
+                                </IconButton>
+                              </TableCell>
+                              <TableCell>
+                                <IconButton
                                   onClick={(e) => handleAssetDownload(e, asset)}
                                 >
-                                  <DownloadForOfflineIcon/>
+                                  <DownloadForOfflineIcon style={{ fill: 'black' }}/>
                                 </IconButton>
                               </TableCell>
                             </TableRow>

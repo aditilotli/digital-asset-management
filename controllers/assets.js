@@ -67,7 +67,7 @@ module.exports = {
             ]
             
             let assetData = await assetModal.aggregate(aggregateQuery);
-            console.log(assetData);
+            // console.log(assetData);
 
             response = {
                 assetData
@@ -115,7 +115,8 @@ module.exports = {
 
             
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+            console.log(error);
+            return res.status(500).json({ error: 'File Uploaded Failed!' });
         }
     },
 
@@ -135,6 +136,24 @@ module.exports = {
                 res.status(500).send("Could not download file.");
                 }
             });
+            } else {
+            return res.status(404).json({ error: 'File not found' });
+            }
+        } catch (error) {
+            console.log("Error:", error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    },
+
+    viewAsset: async (req, res) => {
+        try {
+            const filename = req.params.filename;
+            const filePath = path.join(__dirname, '../uploads', filename);
+
+            console.log(filePath)
+
+            if (fs.existsSync(filePath)) {
+            return res.sendFile(filePath);
             } else {
             return res.status(404).json({ error: 'File not found' });
             }
