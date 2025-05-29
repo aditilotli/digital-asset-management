@@ -15,6 +15,3 @@ A simple digital asset management (DAM) system using Node.js and React front end
 - Search/Filter assets by file type, upload, date, or tags.
 - View/Download each asset.
 - Error handling for upload failures and unsupported file types.
-
-## Storage Strategy – Local vs Cloud
-**local file storage using `multer`**.
